@@ -59,7 +59,7 @@ func (server *Server) RawPut(_ context.Context, req *kvrpcpb.RawPutRequest) (*kv
 		Value: req.GetValue(),
 		Cf:    req.GetCf(),
 	}
-	batch := []storage.Modify{{put}}
+	batch := []storage.Modify{{Data: put}}
 	if err := server.storage.Write(&kvrpcpb.Context{}, batch); err != nil {
 		return &kvrpcpb.RawPutResponse{Error: err.Error()}, nil
 	}
@@ -72,7 +72,7 @@ func (server *Server) RawDelete(_ context.Context, req *kvrpcpb.RawDeleteRequest
 		Key: req.GetKey(),
 		Cf:  req.GetCf(),
 	}
-	batch := []storage.Modify{{del}}
+	batch := []storage.Modify{{Data: del}}
 	if err := server.storage.Write(&kvrpcpb.Context{}, batch); err != nil {
 		return &kvrpcpb.RawDeleteResponse{Error: err.Error()}, nil
 	}
@@ -92,7 +92,7 @@ func (server *Server) RawScan(_ context.Context, req *kvrpcpb.RawScanRequest) (*
 	limit := req.GetLimit()
 	var kvs []*kvrpcpb.KvPair
 	it.Seek(startKey)
-	for limit > 0 {
+	for limit > 0 && it.Valid() {
 		value, err := it.Item().Value()
 		if err != nil {
 			return &kvrpcpb.RawScanResponse{Error: err.Error()}, nil

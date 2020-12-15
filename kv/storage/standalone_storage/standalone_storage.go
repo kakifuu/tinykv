@@ -12,8 +12,7 @@ import (
 // communicate with other nodes and all data is stored locally.
 type StandAloneStorage struct {
 	// Your Data Here (1).
-	db     *badger.DB
-	reader *StandAloneReader
+	db *badger.DB
 }
 
 func NewStandAloneStorage(conf *config.Config) *StandAloneStorage {
@@ -25,12 +24,7 @@ func NewStandAloneStorage(conf *config.Config) *StandAloneStorage {
 	if err != nil {
 		panic(err)
 	}
-	return &StandAloneStorage{
-		db: db,
-		reader: &StandAloneReader{
-			txn: db.NewTransaction(false),
-		},
-	}
+	return &StandAloneStorage{db: db}
 }
 
 func (s *StandAloneStorage) Start() error {
@@ -40,13 +34,16 @@ func (s *StandAloneStorage) Start() error {
 
 func (s *StandAloneStorage) Stop() error {
 	// Your Code Here (1).
-	s.reader.Close()
 	return s.db.Close()
 }
 
 func (s *StandAloneStorage) Reader(ctx *kvrpcpb.Context) (storage.StorageReader, error) {
 	// Your Code Here (1).
-	return s.reader, nil
+	reader := &StandAloneReader{
+		db:  s.db,
+		txn: s.db.NewTransaction(false),
+	}
+	return reader, nil
 }
 
 func (s *StandAloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) error {

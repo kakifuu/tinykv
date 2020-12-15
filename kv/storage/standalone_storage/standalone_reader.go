@@ -11,7 +11,11 @@ type StandAloneReader struct {
 }
 
 func (s *StandAloneReader) GetCF(cf string, key []byte) ([]byte, error) {
-	return engine_util.GetCF(s.db, cf, key)
+	val, err := engine_util.GetCF(s.db, cf, key)
+	if err != nil && err != badger.ErrKeyNotFound {
+		return nil, err
+	}
+	return val, nil
 }
 
 func (s *StandAloneReader) IterCF(cf string) engine_util.DBIterator {
